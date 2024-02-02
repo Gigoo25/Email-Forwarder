@@ -6,6 +6,9 @@ timestamp=$(date +'%d-%b-%y %T')
 # Set empty array for missing environment variables
 missing_vars=()
 
+# Define a list of arguments that require the double dash prefix
+optional_args=("check_interval" "imap_server" "imap_port" "smtp_server" "smtp_port" "log_level")
+
 # Function to check if all required environment variables are set
 check_variable() {
     if [ -z "${!1}" ]; then
@@ -24,5 +27,17 @@ echo "+=+=+=+=+==+=+=+=+=+=+=+==+=+=+=+=+=+=+=+=+=+=+=+"
 echo "${timestamp} - Starting docker container..."
 echo "+=+=+=+=+==+=+=+=+=+=+=+==+=+=+=+=+=+=+=+=+=+=+=+"
 
+# Construct a string with only the necessary environment variables for the Python script
+env_vars=""
+for var in EMAIL_USERNAME EMAIL_PASSWORD FORWARD_TO_EMAIL CHECK_INTERVAL IMAP_SERVER IMAP_PORT SMTP_SERVER SMTP_PORT LOG_LEVEL; do
+    if [ -n "${!var}" ]; then
+        if [[ " ${optional_args[@]} " =~ " ${var} " ]]; then
+            env_vars+="-e --$var=${!var} "
+        else
+            env_vars+="-e $var=${!var} "
+        fi
+    fi
+done
+
 # Run Python script with only the environment variables that are set
-env -i $(env | grep -v '^_' | awk -F= '!($1 in a) {a[$1]; print "export " $0}') python3 email_forwarder.py
+eval "env $env_vars python3 email_forwarder.py $@"
