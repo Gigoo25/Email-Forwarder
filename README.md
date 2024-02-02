@@ -21,5 +21,15 @@ Docker container to forward unread emails from one email to another automaticall
 # Docker CLI Example
 
 ```
-docker run ghcr.io/gigoo25/email_forwarder:main example@yahoo.com VeRySeCuRePaSsWorD forwarded@gmail.com --check_interval=60 --imap_server=imap.gmail.com --imap_port=993 --smtp_server=smtp.gmail.com --smtp_port=587 --log_level=INFO
+version: '3.1'
+
+services:
+  Email_Forwarder:
+    image: ghcr.io/gigoo25/email_forwarder:main
+    container_name: Email_Forwarder
+    environment:
+      - EMAIL_USERNAME="example@yahoo.com"
+      - EMAIL_PASSWORD="VeRySeCuRePaSsWorD"
+      - FORWARD_TO_EMAIL="forwarded@gmail.com"
+    restart: unless-stopped
 ```
