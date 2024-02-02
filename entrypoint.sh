@@ -39,12 +39,12 @@ for var in EMAIL_USERNAME EMAIL_PASSWORD FORWARD_TO_EMAIL CHECK_INTERVAL IMAP_SE
             fi
         done
         if [[ $contains == "true" ]]; then
-            env_vars+="-e --$var=${!var} "
+            env_vars+="--$var=${!var} "
         else
-            env_vars+="-e $var=${!var} "
+            env_vars+="$var=${!var} "
         fi
     fi
 done
 
 # Run Python script with only the environment variables that are set
-eval "env ${env_vars}python3 email_forwarder.py" "$@"
+eval "python3 email_forwarder.py ${env_vars}" "$@"
