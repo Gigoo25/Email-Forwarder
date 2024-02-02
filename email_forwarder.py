@@ -8,30 +8,50 @@ from email.mime.multipart import MIMEMultipart
 from email.utils import formatdate
 from email.utils import parseaddr
 import logging
-import argparse
+import os
 
-# Create the parser
-parser = argparse.ArgumentParser(description='Forward emails with IMAP.')
+# Get the environment variables
+email_username = os.getenv('EMAIL_USERNAME')
+email_password = os.getenv('EMAIL_PASSWORD')
+forward_to_address = os.getenv('FORWARD_TO_ADDRESS')
+check_interval = int(os.getenv('CHECK_INTERVAL', 60))
+imap_server = os.getenv('IMAP_SERVER', "imap.mail.yahoo.com")
+imap_port = int(os.getenv('IMAP_PORT', 993))
+smtp_server = os.getenv('SMTP_SERVER', "smtp.mail.yahoo.com")
+smtp_port = int(os.getenv('SMTP_PORT', 587))
+log_level = os.getenv('LOG_LEVEL', "INFO")
 
-# Add the arguments
-parser.add_argument('email_username', type=str, help='The username of the account.')
-parser.add_argument('email_password', type=str, help='The password of the account.')
-parser.add_argument('forward_to_address', type=str, help='The address to forward emails to.')
-parser.add_argument('check_interval', type=int, default=60, help='The number of seconds to wait between checking for new emails.')
-parser.add_argument('imap_server', type=str, default="imap.mail.yahoo.com", help='The IMAP server to connect to.')
-parser.add_argument('imap_port', type=int, default=993, help='The port to use for the IMAP server.')
-parser.add_argument('smtp_server', type=str, default="smtp.mail.yahoo.com", help='The SMTP server to connect to.')
-parser.add_argument('smtp_port', type=int, default=587, help='The port to use for the SMTP server.')
-parser.add_argument('log_level', type=str, default="INFO", help='The log level to use.')
-
-# Parse the arguments
-args = parser.parse_args()
+# Fail if any of the required environment variables are missing showing the missing variables
+missing_env_vars = []
+if email_username is None:
+    missing_env_vars.append('EMAIL_USERNAME')
+if email_password is None:
+    missing_env_vars.append('EMAIL_PASSWORD')
+if forward_to_address is None:
+    missing_env_vars.append('FORWARD_TO_ADDRESS')
+if missing_env_vars:
+    raise ValueError(f"Missing environment variables: {missing_env_vars}")
 
 # Convert the log level to upper case to ensure it's valid
-log_level = args.log_level.upper()
+log_level = log_level.upper()
 
 # Add debug logs for passed arguments
-logging.debug(f'Showing Passed Arguments: {args}')
+logging.debug("Passed arguments:")
+logging.debug(f"EMAIL_USERNAME: {email_username}")
+logging.debug(f"EMAIL_PASSWORD: {email_password}")
+logging.debug(f"FORWARD_TO_ADDRESS: {forward_to_address}")
+logging.debug(f"CHECK_INTERVAL: {check_interval}")
+logging.debug(f"IMAP_SERVER: {imap_server}")
+logging.debug(f"IMAP_PORT: {imap_port}")
+logging.debug(f"SMTP_SERVER: {smtp_server}")
+logging.debug(f"SMTP_PORT: {smtp_port}")
+logging.debug(f"LOG_LEVEL: {log_level}")
+
+# Check if "email_username" & "forward_to_address" are valid email addresses
+if not email_username.count('@') == 1:
+    raise ValueError(f'Invalid email address: {email_username}')
+if not forward_to_address.count('@') == 1:
+    raise ValueError(f'Invalid email address: {forward_to_address}')
 
 # Check if the log level is valid
 valid_log_levels = ['CRITICAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG']
