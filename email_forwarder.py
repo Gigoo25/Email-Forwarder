@@ -84,7 +84,7 @@ def process_part(part):
 
 def connect_to_imap(email_username, email_password, folder_name="Inbox"):
     try:
-        imap = imaplib.IMAP4_SSL(args.imap_server, args.imap_port)
+        imap = imaplib.IMAP4_SSL(imap_server, imap_port)
         imap.login(email_username, email_password)
         imap.select(folder_name)
         logging.info("Successfully connected to imap server.")
@@ -95,7 +95,7 @@ def connect_to_imap(email_username, email_password, folder_name="Inbox"):
 
 def connect_to_smtp(email_username, email_password):
     try:
-        smtp = smtplib.SMTP(args.smtp_server, args.smtp_port)
+        smtp = smtplib.SMTP(smtp_server, smtp_port)
         smtp.starttls()
         smtp.login(email_username, email_password)
         logging.info("Successfully connected to smtp server.")
@@ -207,12 +207,12 @@ def forward_emails(email_username, email_password, forward_to_address, folder_na
 
             logging.info(f"Successfully forwarded {len(emails_to_forward)} emails.")
 
-        logging.info(f"Done checking for new emails. Waiting for {args.check_interval} seconds before checking again.")
-        time.sleep(args.check_interval)
+        logging.info(f"Done checking for new emails. Waiting for {check_interval} seconds before checking again.")
+        time.sleep(check_interval)
 
 def main():
     logging.info("Forwarding Script started")
-    forward_emails(args.email_username, args.email_password, args.forward_to_address)
+    forward_emails(email_username, email_password, forward_to_address)
 
 if __name__ == "__main__":
     main()
