@@ -31,7 +31,14 @@ echo "+=+=+=+=+==+=+=+=+=+=+=+==+=+=+=+=+=+=+=+=+=+=+=+"
 env_vars=""
 for var in EMAIL_USERNAME EMAIL_PASSWORD FORWARD_TO_EMAIL CHECK_INTERVAL IMAP_SERVER IMAP_PORT SMTP_SERVER SMTP_PORT LOG_LEVEL; do
     if [ -n "${!var}" ]; then
-        if [[ " ${optional_args[@]} " =~ " ${var} " ]]; then
+        contains="false"
+        for item in "${optional_args[@]}"; do
+            if [[ $item == $var ]]; then
+                contains="true"
+                break
+            fi
+        done
+        if [[ $contains == "true" ]]; then
             env_vars+="-e --$var=${!var} "
         else
             env_vars+="-e $var=${!var} "
