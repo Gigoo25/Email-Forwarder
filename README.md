@@ -25,7 +25,7 @@ version: '3.1'
 
 services:
   Email_Forwarder:
-    image: ghcr.io/shared-services-bci/bandwidth_api_ingester:main
+    image: ghcr.io/gigoo25/email_forwarder:main
     container_name: Email_Forwarder
     environment:
       - EMAIL_USERNAME="example@yahoo.com"
