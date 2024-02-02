@@ -47,4 +47,4 @@ for var in EMAIL_USERNAME EMAIL_PASSWORD FORWARD_TO_EMAIL CHECK_INTERVAL IMAP_SE
 done
 
 # Run Python script with only the environment variables that are set
-eval "env $env_vars python3 email_forwarder.py $@"
+eval "env ${env_vars}python3 email_forwarder.py $@"
