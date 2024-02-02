@@ -1,0 +1,19 @@
+name: Cleanup GHCR Images
+
+on:
+  # every sunday at 00:00
+  schedule:
+    - cron: "0 0 * * SUN"
+  # or manually
+  workflow_dispatch:
+
+jobs:
+  delete-untagged-images:
+    name: Delete Untagged Images
+    runs-on: ubuntu-latest
+    steps:
+      - uses: Chizkiyahu/delete-untagged-ghcr-action@main
+        with:
+            token: ${{ secrets.TOKEN }}
+            repository_owner: ${{ github.repository_owner }}
+            owner_type: 'org'

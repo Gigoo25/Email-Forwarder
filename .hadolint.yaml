@@ -1,0 +1,10 @@
+failure-threshold: error
+label-schema:
+  author: text
+  contact: email
+  maintainer: text
+  version: semver
+  org.opencontainers.image.source: url
+strict-labels: true
+trustedRegistries:
+  - "*.gcr.io"
