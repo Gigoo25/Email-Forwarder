@@ -30,6 +30,9 @@ args = parser.parse_args()
 # Convert the log level to upper case to ensure it's valid
 log_level = args.log_level.upper()
 
+# Add debug logs for passed arguments
+logging.debug(f'Showing Passed Arguments: {args}')
+
 # Check if the log level is valid
 valid_log_levels = ['CRITICAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG']
 if log_level not in valid_log_levels:
@@ -68,7 +71,7 @@ def connect_to_imap(email_username, email_password, folder_name="Inbox"):
         return imap
     except Exception as e:
         logging.error(f"Failed to connect to imap server: {e}")
-        return None
+        raise e
 
 def connect_to_smtp(email_username, email_password):
     try:
@@ -79,7 +82,7 @@ def connect_to_smtp(email_username, email_password):
         return smtp
     except Exception as e:
         logging.error(f"Failed to connect to smtp server: {e}")
-        return None
+        raise e
 
 def connect_to_email_server(email_username, email_password, folder_name="Inbox"):
     imap = connect_to_imap(email_username, email_password, folder_name)
