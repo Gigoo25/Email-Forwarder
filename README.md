@@ -18,7 +18,7 @@ Docker container to forward unread emails from one email to another automaticall
 | LOG_LEVEL| This is to increase/decrease the logging of the application. All standard values are acceptable: INFO, ERROR, etc. The default value is "INFO". | Optional |
 
 
-# Docker Compose Example
+# Docker CLI Example
 
 ```
 version: '3.1'
