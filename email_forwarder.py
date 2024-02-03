@@ -162,6 +162,8 @@ def forward_emails(email_username, email_password, forward_to_address, imap_serv
                 
         logging.info(f"Logging out of IMAP server.")
         imap.logout()
+        logging.info(f"Logging out of SMTP server.")
+        smtp.quit()
 
         logging.info(f"Done checking for new emails. Waiting for {check_interval} seconds before checking again.")
         time.sleep(check_interval)
