@@ -87,7 +87,7 @@ def process_email(email_id, imap, email_username, forward_to_address):
 
     sender_name, sender_email = parseaddr(email_message['From'])
 
-    forward_message_header_plain = f"---------- Forwarded message ----------\nFrom: {sender_name} <{sender_email}>\nTo: {email_username}\n"
+    forward_message_header_plain = f"---------- Forwarded message ----------\nFrom: {sender_name} <{sender_email}>\nTo: {email_username}\n---------- Forwarded message ----------\n\n"
     forward_message_header_html = f"""
     <div style="margin: 1em 0; padding: 1em; border: 1px solid #ddd; border-radius: 5px; background-color: #f9f9f9;">
         <h2 style="margin: 0; font-size: 1em; font-weight: bold;">Forwarded message</h2>
