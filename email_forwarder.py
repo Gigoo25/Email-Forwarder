@@ -124,7 +124,9 @@ def forward_emails(email_username, email_password, forward_to_address, imap_serv
     while True:
         try:
             logging.info("Checking for new emails...")
+            imap, smtp = connect_to_email_server(email_username, email_password, imap_server, imap_port, smtp_server, smtp_port, folder_name)
             unread_emails = fetch_unread_emails(imap)
+            imap.logout()
         except Exception as e:
             logging.error(f"Failed to fetch unread emails: {e}")
             continue
