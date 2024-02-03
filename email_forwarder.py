@@ -9,6 +9,7 @@ from email.utils import formatdate
 from email.utils import parseaddr
 import logging
 import os
+import sys
 
 def remove_quotes(s):
     if s[0] == '"' and s[-1] == '"':
@@ -32,7 +33,7 @@ def process_part(part):
         else:
             return '', ''
 
-def connect_to_imap(email_username, email_password, folder_name="Inbox"):
+def connect_to_imap(email_username, email_password, imap_server, imap_port, folder_name="Inbox"):
     try:
         imap = imaplib.IMAP4_SSL(imap_server, imap_port)
         imap.login(email_username, email_password)
@@ -43,7 +44,7 @@ def connect_to_imap(email_username, email_password, folder_name="Inbox"):
         logging.error(f"Failed to connect to imap server: {e}")
         raise e
 
-def connect_to_smtp(email_username, email_password):
+def connect_to_smtp(email_username, email_password, smtp_server, smtp_port):
     try:
         smtp = smtplib.SMTP(smtp_server, smtp_port)
         smtp.starttls()
@@ -54,9 +55,9 @@ def connect_to_smtp(email_username, email_password):
         logging.error(f"Failed to connect to smtp server: {e}")
         raise e
 
-def connect_to_email_server(email_username, email_password, folder_name="Inbox"):
-    imap = connect_to_imap(email_username, email_password, folder_name)
-    smtp = connect_to_smtp(email_username, email_password)
+def connect_to_email_server(email_username, email_password, imap_server, imap_port, smtp_server, smtp_port, folder_name="Inbox"):
+    imap = connect_to_imap(email_username, email_password, imap_server, imap_port, folder_name)
+    smtp = connect_to_smtp(email_username, email_password, smtp_server, smtp_port)
 
     return imap, smtp
 
@@ -111,11 +112,11 @@ def process_email(email_id, imap, email_username, forward_to_address):
 
     return prepared_email
 
-def forward_emails(email_username, email_password, forward_to_address, folder_name="Inbox"):
+def forward_emails(email_username, email_password, forward_to_address, imap_server, imap_port, smtp_server, smtp_port, check_interval, folder_name="Inbox"):
     try:
         logging.info(f"Forwarding emails from: {email_username} to: {forward_to_address}")
 
-        imap, smtp = connect_to_email_server(email_username, email_password, folder_name)
+        imap, smtp = connect_to_email_server(email_username, email_password, imap_server, imap_port, smtp_server, smtp_port, folder_name)
     except Exception as e:
         logging.error(f"Failed to connect to email: {e}")
         return
@@ -143,9 +144,16 @@ def forward_emails(email_username, email_password, forward_to_address, folder_na
 
             if smtp is None or not smtp.noop()[0] == 250:
                 try:
-                    smtp = connect_to_smtp(email_username, email_password)
+                    smtp = connect_to_smtp(email_username, email_password, smtp_server, smtp_port)
                 except Exception as e:
                     logging.error(f"Failed to connect to SMTP: {e}")
+                    continue
+                    
+            if imap is None or not imap.noop()[0] == 'OK':
+                try:
+                    imap = connect_to_imap(email_username, email_password, imap_server, imap_port, folder_name)
+                except Exception as e:
+                    logging.error(f"Failed to connect to IMAP: {e}")
                     continue
 
             for email in emails_to_forward:
@@ -231,7 +239,7 @@ def main():
         raise ValueError(f'Invalid email address: {forward_to_address}')
 
     # Start the forwarding process
-    forward_emails(email_username, email_password, forward_to_address)
+    forward_emails(email_username, email_password, forward_to_address, imap_server, imap_port, smtp_server, smtp_port, check_interval)
 
 if __name__ == "__main__":
     main()
