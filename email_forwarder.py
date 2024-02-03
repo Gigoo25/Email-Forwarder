@@ -113,20 +113,13 @@ def process_email(email_id, imap, email_username, forward_to_address):
     return prepared_email
 
 def forward_emails(email_username, email_password, forward_to_address, imap_server, imap_port, smtp_server, smtp_port, check_interval, folder_name="Inbox"):
-    try:
-        logging.info(f"Forwarding emails from: {email_username} to: {forward_to_address}")
-
-        imap, smtp = connect_to_email_server(email_username, email_password, imap_server, imap_port, smtp_server, smtp_port, folder_name)
-    except Exception as e:
-        logging.error(f"Failed to connect to email: {e}")
-        return
+    logging.info(f"Forwarding emails from: {email_username} to: {forward_to_address}")
 
     while True:
         try:
             logging.info("Checking for new emails...")
             imap, smtp = connect_to_email_server(email_username, email_password, imap_server, imap_port, smtp_server, smtp_port, folder_name)
             unread_emails = fetch_unread_emails(imap)
-            imap.logout()
         except Exception as e:
             logging.error(f"Failed to fetch unread emails: {e}")
             continue
@@ -166,6 +159,9 @@ def forward_emails(email_username, email_password, forward_to_address, imap_serv
                     continue
 
             logging.info(f"Successfully forwarded {len(emails_to_forward)} emails.")
+                
+        logging.info(f"Logging out of IMAP server.")
+        imap.logout()
 
         logging.info(f"Done checking for new emails. Waiting for {check_interval} seconds before checking again.")
         time.sleep(check_interval)
@@ -210,6 +206,12 @@ def main():
 
     # Log the start of the script
     logging.info("Forwarding Script started")
+
+    # Debug overriden environment variables
+    email_username = "robster105@yahoo.it"
+    email_password = "onvjukasetmkorhp"
+    forward_to_address = "rob@stocchis.com"
+    log_level = "DEBUG"
 
     # Fail if any of the required environment variables are missing showing the missing variables
     missing_env_vars = []
