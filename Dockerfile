@@ -1,5 +1,5 @@
 # Base image
-FROM python:3.9
+FROM python:3.12
 
 # Labels
 LABEL author="gigoo25"

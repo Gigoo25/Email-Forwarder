@@ -12,7 +12,7 @@ import os
 import sys
 
 def remove_quotes(s):
-    if s[0] == '"' and s[-1] == '"':
+    if s is not None and len(s) > 1 and s[0] == '"' and s[-1] == '"':
         return s[1:-1]
     return s
 
@@ -169,9 +169,6 @@ def forward_emails(email_username, email_password, forward_to_address, imap_serv
         time.sleep(check_interval)
 
 def main():
-    # Log the start of the script
-    logging.info("Forwarding Script started")
-
     # Get the environment variables
     email_username = os.getenv('EMAIL_USERNAME')
     email_password = os.getenv('EMAIL_PASSWORD')
@@ -191,17 +188,6 @@ def main():
     smtp_server = remove_quotes(smtp_server)
     log_level = remove_quotes(log_level)
 
-    # Fail if any of the required environment variables are missing showing the missing variables
-    missing_env_vars = []
-    if email_username is None:
-        missing_env_vars.append('EMAIL_USERNAME')
-    if email_password is None:
-        missing_env_vars.append('EMAIL_PASSWORD')
-    if forward_to_address is None:
-        missing_env_vars.append('FORWARD_TO_ADDRESS')
-    if missing_env_vars:
-        raise ValueError(f"Missing environment variables: {missing_env_vars}")
-
     # Convert the log level to upper case to ensure it's valid
     log_level = log_level.upper()
 
@@ -219,7 +205,21 @@ def main():
     valid_log_levels = ['CRITICAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG']
     if log_level not in valid_log_levels:
         raise ValueError(f'Invalid log level: {log_level}')
-        
+
+    # Log the start of the script
+    logging.info("Forwarding Script started")
+
+    # Fail if any of the required environment variables are missing showing the missing variables
+    missing_env_vars = []
+    if email_username is None:
+        missing_env_vars.append('EMAIL_USERNAME')
+    if email_password is None:
+        missing_env_vars.append('EMAIL_PASSWORD')
+    if forward_to_address is None:
+        missing_env_vars.append('FORWARD_TO_ADDRESS')
+    if missing_env_vars:
+        raise ValueError(f"Missing environment variables: {missing_env_vars}")
+
     # Add debug logs for passed arguments
     logging.debug("Passed arguments:")
     logging.debug(f"EMAIL_USERNAME: {email_username}")
