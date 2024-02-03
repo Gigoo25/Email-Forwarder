@@ -10,8 +10,8 @@ LABEL org.opencontainers.image.source="https://github.com/Gigoo25/Email-Forwarde
 # Working Directory
 WORKDIR /usr/app/src
 
-# Copy the scripts and give them the correct permissions
-COPY email_forwarder.py .
+# Copy the script
+COPY email_forwarder.py ./
 
 # Set the entrypoint
-ENTRYPOINT ["python", "email_forwarder.py"]
+ENTRYPOINT ["python", "-u", "email_forwarder.py"]
