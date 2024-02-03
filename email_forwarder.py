@@ -10,61 +10,11 @@ from email.utils import parseaddr
 import logging
 import os
 
-# Get the environment variables
-email_username = os.getenv('EMAIL_USERNAME')
-email_password = os.getenv('EMAIL_PASSWORD')
-forward_to_address = os.getenv('FORWARD_TO_ADDRESS')
-check_interval = int(os.getenv('CHECK_INTERVAL', 60))
-imap_server = os.getenv('IMAP_SERVER', "imap.mail.yahoo.com")
-imap_port = int(os.getenv('IMAP_PORT', 993))
-smtp_server = os.getenv('SMTP_SERVER', "smtp.mail.yahoo.com")
-smtp_port = int(os.getenv('SMTP_PORT', 587))
-log_level = os.getenv('LOG_LEVEL', "INFO")
+def remove_quotes(s):
+    if s[0] == '"' and s[-1] == '"':
+        return s[1:-1]
+    return s
 
-# Fail if any of the required environment variables are missing showing the missing variables
-missing_env_vars = []
-if email_username is None:
-    missing_env_vars.append('EMAIL_USERNAME')
-if email_password is None:
-    missing_env_vars.append('EMAIL_PASSWORD')
-if forward_to_address is None:
-    missing_env_vars.append('FORWARD_TO_ADDRESS')
-if missing_env_vars:
-    raise ValueError(f"Missing environment variables: {missing_env_vars}")
-
-# Convert the log level to upper case to ensure it's valid
-log_level = log_level.upper()
-
-# Add debug logs for passed arguments
-logging.debug("Passed arguments:")
-logging.debug(f"EMAIL_USERNAME: {email_username}")
-logging.debug(f"EMAIL_PASSWORD: {email_password}")
-logging.debug(f"FORWARD_TO_ADDRESS: {forward_to_address}")
-logging.debug(f"CHECK_INTERVAL: {check_interval}")
-logging.debug(f"IMAP_SERVER: {imap_server}")
-logging.debug(f"IMAP_PORT: {imap_port}")
-logging.debug(f"SMTP_SERVER: {smtp_server}")
-logging.debug(f"SMTP_PORT: {smtp_port}")
-logging.debug(f"LOG_LEVEL: {log_level}")
-
-# Check if "email_username" & "forward_to_address" are valid email addresses
-if not email_username.count('@') == 1:
-    raise ValueError(f'Invalid email address: {email_username}')
-if not forward_to_address.count('@') == 1:
-    raise ValueError(f'Invalid email address: {forward_to_address}')
-
-# Check if the log level is valid
-valid_log_levels = ['CRITICAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG']
-if log_level not in valid_log_levels:
-    raise ValueError(f'Invalid log level: {log_level}')
-
-# Set the log level
-logging.basicConfig(
-    level=getattr(logging, log_level),
-    format='%(asctime)s - %(levelname)s - %(message)s',
-    datefmt='%Y-%m-%d %H:%M:%S'
-)
-        
 def process_part(part):
     if part.is_multipart():
         parts_plain_text = [process_part(p)[0] for p in part.get_payload()]
@@ -211,7 +161,76 @@ def forward_emails(email_username, email_password, forward_to_address, folder_na
         time.sleep(check_interval)
 
 def main():
+    # Log the start of the script
     logging.info("Forwarding Script started")
+
+    # Get the environment variables
+    email_username = os.getenv('EMAIL_USERNAME')
+    email_password = os.getenv('EMAIL_PASSWORD')
+    forward_to_address = os.getenv('FORWARD_TO_ADDRESS')
+    check_interval = int(os.getenv('CHECK_INTERVAL', 60))
+    imap_server = os.getenv('IMAP_SERVER', "imap.mail.yahoo.com")
+    imap_port = int(os.getenv('IMAP_PORT', 993))
+    smtp_server = os.getenv('SMTP_SERVER', "smtp.mail.yahoo.com")
+    smtp_port = int(os.getenv('SMTP_PORT', 587))
+    log_level = os.getenv('LOG_LEVEL', "INFO")
+
+    # Remove the first and last characters if they are both " from the environment variables
+    email_username = remove_quotes(email_username)
+    email_password = remove_quotes(email_password)
+    forward_to_address = remove_quotes(forward_to_address)
+    imap_server = remove_quotes(imap_server)
+    smtp_server = remove_quotes(smtp_server)
+    log_level = remove_quotes(log_level)
+
+    # Fail if any of the required environment variables are missing showing the missing variables
+    missing_env_vars = []
+    if email_username is None:
+        missing_env_vars.append('EMAIL_USERNAME')
+    if email_password is None:
+        missing_env_vars.append('EMAIL_PASSWORD')
+    if forward_to_address is None:
+        missing_env_vars.append('FORWARD_TO_ADDRESS')
+    if missing_env_vars:
+        raise ValueError(f"Missing environment variables: {missing_env_vars}")
+
+    # Convert the log level to upper case to ensure it's valid
+    log_level = log_level.upper()
+
+    # Set the log level
+    logging.basicConfig(
+        level=getattr(logging, log_level),
+        format='%(asctime)s - %(levelname)s - %(message)s',
+        datefmt='%Y-%m-%d %H:%M:%S',
+        handlers=[
+            logging.StreamHandler(sys.stdout)
+        ]
+    )
+
+    # Check if the log level is valid
+    valid_log_levels = ['CRITICAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG']
+    if log_level not in valid_log_levels:
+        raise ValueError(f'Invalid log level: {log_level}')
+        
+    # Add debug logs for passed arguments
+    logging.debug("Passed arguments:")
+    logging.debug(f"EMAIL_USERNAME: {email_username}")
+    logging.debug(f"EMAIL_PASSWORD: {email_password}")
+    logging.debug(f"FORWARD_TO_ADDRESS: {forward_to_address}")
+    logging.debug(f"CHECK_INTERVAL: {check_interval}")
+    logging.debug(f"IMAP_SERVER: {imap_server}")
+    logging.debug(f"IMAP_PORT: {imap_port}")
+    logging.debug(f"SMTP_SERVER: {smtp_server}")
+    logging.debug(f"SMTP_PORT: {smtp_port}")
+    logging.debug(f"LOG_LEVEL: {log_level}")
+
+    # Check if "email_username" & "forward_to_address" are valid email addresses
+    if not email_username.count('@') == 1:
+        raise ValueError(f'Invalid email address: {email_username}')
+    if not forward_to_address.count('@') == 1:
+        raise ValueError(f'Invalid email address: {forward_to_address}')
+
+    # Start the forwarding process
     forward_emails(email_username, email_password, forward_to_address)
 
 if __name__ == "__main__":
