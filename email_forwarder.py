@@ -87,12 +87,12 @@ def process_email(email_id, imap, email_username, forward_to_address):
 
     sender_name, sender_email = parseaddr(email_message['From'])
 
-    forward_message_header_plain = f"---------- Forwarded message ----------\nFrom: {sender_name} <{sender_email}>\nTo: {email_username}\n---------- Forwarded message ----------\n\n"
+    forward_message_header_plain = f"---------- Forwarded message ----------\nFrom: {email_username}\nTo: {sender_name} <{sender_email}>\n---------- Forwarded message ----------\n\n"
     forward_message_header_html = f"""
     <div style="margin: 1em 0; padding: 1em; border: 1px solid #ddd; border-radius: 5px; background-color: #f9f9f9;">
         <h2 style="margin: 0; font-size: 1em; font-weight: bold;">Forwarded message</h2>
-        <p style="margin: 0.5em 0;">From: <span style="font-weight: bold;">{sender_name}</span> &lt;{sender_email}&gt;</p>
-        <p style="margin: 0.5em 0;">To: <span style="font-weight: bold;">{email_username}</span></p>
+        <p style="margin: 0.5em 0;">From: <span style="font-weight: bold;">{email_username}</span></p>
+        <p style="margin: 0.5em 0;">To: <span style="font-weight: bold;">{sender_name}</span> &lt;{sender_email}&gt;</p>
     </div>
     """
 
@@ -173,7 +173,7 @@ def main():
     email_username = os.getenv('EMAIL_USERNAME')
     email_password = os.getenv('EMAIL_PASSWORD')
     forward_to_address = os.getenv('FORWARD_TO_ADDRESS')
-    check_interval = int(os.getenv('CHECK_INTERVAL', 60))
+    check_interval = int(os.getenv('CHECK_INTERVAL', 300))
     imap_server = os.getenv('IMAP_SERVER', "imap.mail.yahoo.com")
     imap_port = int(os.getenv('IMAP_PORT', 993))
     smtp_server = os.getenv('SMTP_SERVER', "smtp.mail.yahoo.com")

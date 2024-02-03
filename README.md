@@ -10,7 +10,7 @@ Docker container to forward unread emails from one email to another automaticall
 | EMAIL_USERNAME | The username used to log into the email account you want to forward. | Required |
 | EMAIL_PASSWORD | The password used to log into the email account you want to forward.  | Required |
 | FORWARD_TO_ADDRESS | The email address you want to forward the emails to. | Required |
-| CHECK_INTERVAL | The amount of time you want to wait between checking for new emails to forward (In Seconds). The default value is 60 seconds. | Optional |
+| CHECK_INTERVAL | The amount of time you want to wait between checking for new emails to forward (In Seconds). The default value is 300 seconds. | Optional |
 | IMAP_SERVER | The imap server you will be using for the email that you are forwarding from. The default value is "imap.mail.yahoo.com". | Optional |
 | IMAP_PORT | The port that will be used when connectin to the specified imap server. The default value is "993". | Optional |
 | SMTP_SERVER | The smtp server you will be using for the email that you are forwarding from. The default value is "smtp.mail.yahoo.com".  | Optional |
