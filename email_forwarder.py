@@ -87,12 +87,20 @@ def process_email(email_id, imap, email_username, forward_to_address):
 
     sender_name, sender_email = parseaddr(email_message['From'])
 
-    forward_message_header_plain = f"---------- Forwarded message ----------\nFrom: {email_username}\nTo: {sender_name} <{sender_email}>\n---------- Forwarded message ----------\n\n"
+    forward_message_header_plain = f"""
+    ---------- Forwarded message ----------\n
+    From: {sender_name} <{sender_email}>\n
+    Original Recipient: {email_username}\n
+    New Recipient: {forward_to_address}\n
+    --------------------------------------\n\n
+    """
+
     forward_message_header_html = f"""
     <div style="margin: 1em 0; padding: 1em; border: 1px solid #ddd; border-radius: 5px; background-color: #f9f9f9;">
         <h2 style="margin: 0; font-size: 1em; font-weight: bold;">Forwarded message</h2>
-        <p style="margin: 0.5em 0;">From: <span style="font-weight: bold;">{email_username}</span></p>
-        <p style="margin: 0.5em 0;">To: <span style="font-weight: bold;">{sender_name}</span> &lt;{sender_email}&gt;</p>
+        <p style="margin: 0.5em 0;">From: <span style="font-weight: bold;">{sender_name}</span> &lt;{sender_email}&gt;</p>
+        <p style="margin: 0.5em 0;">Original Recipient: <span style="font-weight: bold;">{email_username}</span></p>
+        <p style="margin: 0.5em 0;">New Recipient: <span style="font-weight: bold;">{forward_to_address}</span></p>
     </div>
     """
 
@@ -208,12 +216,6 @@ def main():
 
     # Log the start of the script
     logging.info("Forwarding Script started")
-
-    # Debug overriden environment variables
-    email_username = "robster105@yahoo.it"
-    email_password = "onvjukasetmkorhp"
-    forward_to_address = "rob@stocchis.com"
-    log_level = "DEBUG"
 
     # Fail if any of the required environment variables are missing showing the missing variables
     missing_env_vars = []
