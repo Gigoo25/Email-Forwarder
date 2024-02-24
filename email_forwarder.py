@@ -103,10 +103,10 @@ def process_email(email_id, imap, email_username, forward_to_address):
 
     multipart_email = MIMEMultipart('alternative')
 
-    if html_body.strip():
-        multipart_email.attach(MIMEText(html_body, 'html'))
     if plain_text_body.strip():
         multipart_email.attach(MIMEText(plain_text_body, 'plain'))
+    if html_body.strip():
+        multipart_email.attach(MIMEText(html_body, 'html'))
 
     prepared_email = prepare_forward_message(email_username, forward_to_address, email_message, multipart_email)
 
