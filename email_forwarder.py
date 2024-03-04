@@ -33,26 +33,26 @@ def process_part(part):
         else:
             return '', ''
 
-def connect_to_imap(email_username, email_password, imap_server, imap_port, folder_name="Inbox"):
+def connect_to_imap(email_username, email_password, imap_server, imap_port, timeout=300, folder_name="Inbox"):
     try:
-        imap = imaplib.IMAP4_SSL(imap_server, imap_port)
+        imap = imaplib.IMAP4_SSL(imap_server, imap_port, timeout=timeout)
         imap.login(email_username, email_password)
         imap.select(folder_name)
-        logging.info("Successfully connected to imap server.")
+        logging.info("Successfully connected to IMAP server.")
         return imap
     except Exception as e:
-        logging.error(f"Failed to connect to imap server: {e}")
+        logging.error(f"Failed to connect to IMAP server: {e}")
         raise e
 
-def connect_to_smtp(email_username, email_password, smtp_server, smtp_port):
+def connect_to_smtp(email_username, email_password, smtp_server, smtp_port, timeout=300):
     try:
-        smtp = smtplib.SMTP(smtp_server, smtp_port)
+        smtp = smtplib.SMTP(smtp_server, smtp_port, timeout=timeout)
         smtp.starttls()
         smtp.login(email_username, email_password)
-        logging.info("Successfully connected to smtp server.")
+        logging.info("Successfully connected to SMTP server.")
         return smtp
     except Exception as e:
-        logging.error(f"Failed to connect to smtp server: {e}")
+        logging.error(f"Failed to connect to SMTP server: {e}")
         raise e
 
 def connect_to_email_server(email_username, email_password, imap_server, imap_port, smtp_server, smtp_port, folder_name="Inbox"):
