@@ -33,9 +33,8 @@ def process_part(part):
         else:
             return '', ''
 
-def connect_to_imap(email_username, email_password, imap_server, imap_port, timeout=300, folder_name="Inbox"):
+def connect_to_imap(email_username, email_password, imap_server, imap_port, folder_name="Inbox", timeout=300):
     try:
-        timeout = int(timeout)
         imap = imaplib.IMAP4_SSL(imap_server, imap_port, timeout=timeout)
         imap.login(email_username, email_password)
         imap.select(folder_name)
@@ -47,7 +46,6 @@ def connect_to_imap(email_username, email_password, imap_server, imap_port, time
 
 def connect_to_smtp(email_username, email_password, smtp_server, smtp_port, timeout=300):
     try:
-        timeout = int(timeout)
         smtp = smtplib.SMTP(smtp_server, smtp_port, timeout=timeout)
         smtp.starttls()
         smtp.login(email_username, email_password)
