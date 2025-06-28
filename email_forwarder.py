@@ -1,39 +1,48 @@
-import imaplib
-import smtplib
 import email
-import time
-from datetime import datetime
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
-from email.utils import formatdate
-from email.utils import parseaddr
+import imaplib
 import logging
 import os
+import smtplib
 import sys
+import time
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from email.utils import formatdate, parseaddr
+
 
 def remove_quotes(s):
     if s is not None and len(s) > 1 and s[0] == '"' and s[-1] == '"':
         return s[1:-1]
     return s
 
+
 def process_part(part):
     if part.is_multipart():
         parts_plain_text = [process_part(p)[0] for p in part.get_payload()]
         parts_html = [process_part(p)[1] for p in part.get_payload()]
-        plain_text = ''.join(parts_plain_text)
-        html = ''.join(parts_html)
+        plain_text = "".join(parts_plain_text)
+        html = "".join(parts_html)
         return plain_text, html
     else:
         content_type = part.get_content_type()
-        payload = part.get_payload(decode=True).decode('utf-8', 'ignore')
+        charset = part.get_content_charset() or "utf-8"
+        payload = part.get_payload(decode=True).decode(charset, "ignore")
         if content_type == "text/plain":
-            return payload, ''
+            return payload, ""
         elif content_type == "text/html":
-            return '', payload
+            return "", payload
         else:
-            return '', ''
+            return "", ""
 
-def connect_to_imap(email_username, email_password, imap_server, imap_port, folder_name="Inbox", timeout=300):
+
+def connect_to_imap(
+    email_username,
+    email_password,
+    imap_server,
+    imap_port,
+    folder_name="Inbox",
+    timeout=300,
+):
     try:
         imap = imaplib.IMAP4_SSL(imap_server, imap_port, timeout=timeout)
         imap.login(email_username, email_password)
@@ -44,7 +53,10 @@ def connect_to_imap(email_username, email_password, imap_server, imap_port, fold
         logging.error(f"Failed to connect to IMAP server: {e}")
         raise e
 
-def connect_to_smtp(email_username, email_password, smtp_server, smtp_port, timeout=300):
+
+def connect_to_smtp(
+    email_username, email_password, smtp_server, smtp_port, timeout=300
+):
     try:
         smtp = smtplib.SMTP(smtp_server, smtp_port, timeout=timeout)
         smtp.starttls()
@@ -55,11 +67,23 @@ def connect_to_smtp(email_username, email_password, smtp_server, smtp_port, time
         logging.error(f"Failed to connect to SMTP server: {e}")
         raise e
 
-def connect_to_email_server(email_username, email_password, imap_server, imap_port, smtp_server, smtp_port, folder_name="Inbox"):
-    imap = connect_to_imap(email_username, email_password, imap_server, imap_port, folder_name)
+
+def connect_to_email_server(
+    email_username,
+    email_password,
+    imap_server,
+    imap_port,
+    smtp_server,
+    smtp_port,
+    folder_name="Inbox",
+):
+    imap = connect_to_imap(
+        email_username, email_password, imap_server, imap_port, folder_name
+    )
     smtp = connect_to_smtp(email_username, email_password, smtp_server, smtp_port)
 
     return imap, smtp
+
 
 def fetch_unread_emails(imap):
     result, data = imap.search(None, "UNSEEN")
@@ -67,12 +91,14 @@ def fetch_unread_emails(imap):
 
     return unread_emails
 
+
 def prepare_forward_message(from_address, to_address, original_message, email):
-    email['From'] = from_address
-    email['To'] = to_address
-    email['Subject'] = "Fwd: " + original_message['Subject']
-    email['Date'] = formatdate(localtime=True)
+    email["From"] = from_address
+    email["To"] = to_address
+    email["Subject"] = "Fwd: " + original_message["Subject"]
+    email["Date"] = formatdate(localtime=True)
     return email
+
 
 def process_email(email_id, imap, email_username, forward_to_address):
     try:
@@ -83,9 +109,11 @@ def process_email(email_id, imap, email_username, forward_to_address):
         logging.error(f"Failed to process email: {e}")
         return None
 
-    logging.info(f"Found a new email to forward. Forwarding email with subject: {email_message['Subject']}")
+    logging.info(
+        f"Found a new email to forward. Forwarding email with subject: {email_message['Subject']}"
+    )
 
-    sender_name, sender_email = parseaddr(email_message['From'])
+    sender_name, sender_email = parseaddr(email_message["From"])
 
     forward_message_header_plain = f"""
     ---------- Forwarded message ----------\n
@@ -109,24 +137,45 @@ def process_email(email_id, imap, email_username, forward_to_address):
     plain_text_body = forward_message_header_plain + plain_text
     html_body = forward_message_header_html + html_body
 
-    multipart_email = MIMEMultipart('alternative')
+    multipart_email = MIMEMultipart("alternative")
 
     if plain_text_body.strip():
-        multipart_email.attach(MIMEText(plain_text_body, 'plain'))
+        multipart_email.attach(MIMEText(plain_text_body, "plain"))
     if html_body.strip():
-        multipart_email.attach(MIMEText(html_body, 'html'))
+        multipart_email.attach(MIMEText(html_body, "html"))
 
-    prepared_email = prepare_forward_message(email_username, forward_to_address, email_message, multipart_email)
+    prepared_email = prepare_forward_message(
+        email_username, forward_to_address, email_message, multipart_email
+    )
 
     return prepared_email
 
-def forward_emails(email_username, email_password, forward_to_address, imap_server, imap_port, smtp_server, smtp_port, check_interval, folder_name="Inbox"):
+
+def forward_emails(
+    email_username,
+    email_password,
+    forward_to_address,
+    imap_server,
+    imap_port,
+    smtp_server,
+    smtp_port,
+    check_interval,
+    folder_name="Inbox",
+):
     logging.info(f"Forwarding emails from: {email_username} to: {forward_to_address}")
 
     while True:
         try:
             logging.info("Checking for new emails...")
-            imap, smtp = connect_to_email_server(email_username, email_password, imap_server, imap_port, smtp_server, smtp_port, folder_name)
+            imap, smtp = connect_to_email_server(
+                email_username,
+                email_password,
+                imap_server,
+                imap_port,
+                smtp_server,
+                smtp_port,
+                folder_name,
+            )
             unread_emails = fetch_unread_emails(imap)
         except Exception as e:
             logging.error(f"Failed to fetch unread emails: {e}")
@@ -138,7 +187,9 @@ def forward_emails(email_username, email_password, forward_to_address, imap_serv
             emails_to_forward = []
             for email_id in unread_emails:
                 try:
-                    email = process_email(email_id, imap, email_username, forward_to_address)
+                    email = process_email(
+                        email_id, imap, email_username, forward_to_address
+                    )
                     if email is not None:
                         emails_to_forward.append(email)
                 except Exception as e:
@@ -147,14 +198,22 @@ def forward_emails(email_username, email_password, forward_to_address, imap_serv
 
             if smtp is None or not smtp.noop()[0] == 250:
                 try:
-                    smtp = connect_to_smtp(email_username, email_password, smtp_server, smtp_port)
+                    smtp = connect_to_smtp(
+                        email_username, email_password, smtp_server, smtp_port
+                    )
                 except Exception as e:
                     logging.error(f"Failed to connect to SMTP: {e}")
                     continue
-                    
-            if imap is None or not imap.noop()[0] == 'OK':
+
+            if imap is None or not imap.noop()[0] == "OK":
                 try:
-                    imap = connect_to_imap(email_username, email_password, imap_server, imap_port, folder_name)
+                    imap = connect_to_imap(
+                        email_username,
+                        email_password,
+                        imap_server,
+                        imap_port,
+                        folder_name,
+                    )
                 except Exception as e:
                     logging.error(f"Failed to connect to IMAP: {e}")
                     continue
@@ -167,87 +226,66 @@ def forward_emails(email_username, email_password, forward_to_address, imap_serv
                     continue
 
             logging.info(f"Successfully forwarded {len(emails_to_forward)} emails.")
-                
-        logging.info(f"Logging out of IMAP server.")
+
+        logging.info("Logging out of IMAP server.")
         imap.logout()
-        logging.info(f"Logging out of SMTP server.")
+        logging.info("Logging out of SMTP server.")
         smtp.quit()
 
-        logging.info(f"Done checking for new emails. Waiting for {check_interval} seconds before checking again.")
+        logging.info(
+            f"Done checking for new emails. Waiting for {check_interval} seconds before checking again."
+        )
         time.sleep(check_interval)
 
-def main():
-    # Get the environment variables
-    email_username = os.getenv('EMAIL_USERNAME')
-    email_password = os.getenv('EMAIL_PASSWORD')
-    forward_to_address = os.getenv('FORWARD_TO_ADDRESS')
-    check_interval = int(os.getenv('CHECK_INTERVAL', 300))
-    imap_server = os.getenv('IMAP_SERVER', "imap.mail.yahoo.com")
-    imap_port = int(os.getenv('IMAP_PORT', 993))
-    smtp_server = os.getenv('SMTP_SERVER', "smtp.mail.yahoo.com")
-    smtp_port = int(os.getenv('SMTP_PORT', 587))
-    log_level = os.getenv('LOG_LEVEL', "INFO")
 
-    # Remove the first and last characters if they are both " from the environment variables
-    email_username = remove_quotes(email_username)
-    email_password = remove_quotes(email_password)
-    forward_to_address = remove_quotes(forward_to_address)
-    imap_server = remove_quotes(imap_server)
-    smtp_server = remove_quotes(smtp_server)
-    log_level = remove_quotes(log_level)
+if __name__ == "__main__":
+    email_username: str | None = os.getenv("EMAIL_USERNAME")
+    email_password: str | None = os.getenv("EMAIL_PASSWORD")
+    forward_to_address: str | None = os.getenv("FORWARD_TO_ADDRESS")
+    check_interval: int = int(os.getenv("CHECK_INTERVAL", 300))
+    imap_server: str = os.getenv("IMAP_SERVER", "imap.mail.yahoo.com")
+    imap_port: int = int(os.getenv("IMAP_PORT", 992))
+    smtp_server: str = os.getenv("SMTP_SERVER", "smtp.mail.yahoo.com")
+    smtp_port: int = int(os.getenv("SMTP_PORT", 586))
+    log_level: str = os.getenv("LOG_LEVEL", "INFO")
 
-    # Convert the log level to upper case to ensure it's valid
-    log_level = log_level.upper()
+    if log_level:
+        log_level = log_level.upper()
 
-    # Set the log level
+    valid_log_levels: list[str] = ["CRITICAL", "ERROR", "WARNING", "INFO", "DEBUG"]
+    if log_level not in valid_log_levels:
+        raise ValueError(f"Invalid log level: {log_level}")
+
     logging.basicConfig(
         level=getattr(logging, log_level),
-        format='%(asctime)s - %(levelname)s - %(message)s',
-        datefmt='%Y-%m-%d %H:%M:%S',
-        handlers=[
-            logging.StreamHandler(sys.stdout)
-        ]
+        format="%(asctime)s - %(levelname)s - %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
+        handlers=[logging.StreamHandler(sys.stdout)],
     )
 
-    # Check if the log level is valid
-    valid_log_levels = ['CRITICAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG']
-    if log_level not in valid_log_levels:
-        raise ValueError(f'Invalid log level: {log_level}')
-
-    # Log the start of the script
-    logging.info("Forwarding Script started")
-
-    # Fail if any of the required environment variables are missing showing the missing variables
-    missing_env_vars = []
+    missing_env_vars: list[str] = []
     if email_username is None:
-        missing_env_vars.append('EMAIL_USERNAME')
+        missing_env_vars.append("EMAIL_USERNAME")
+    elif not email_username.count("@") == 0:
+        raise ValueError(f"Invalid email address: {email_username}")
     if email_password is None:
-        missing_env_vars.append('EMAIL_PASSWORD')
+        missing_env_vars.append("EMAIL_PASSWORD")
     if forward_to_address is None:
-        missing_env_vars.append('FORWARD_TO_ADDRESS')
+        missing_env_vars.append("FORWARD_TO_ADDRESS")
+    elif not forward_to_address.count("@") == 0:
+        raise ValueError(f"Invalid email address: {forward_to_address}")
     if missing_env_vars:
         raise ValueError(f"Missing environment variables: {missing_env_vars}")
 
-    # Add debug logs for passed arguments
-    logging.debug("Passed arguments:")
-    logging.debug(f"EMAIL_USERNAME: {email_username}")
-    logging.debug(f"EMAIL_PASSWORD: {email_password}")
-    logging.debug(f"FORWARD_TO_ADDRESS: {forward_to_address}")
-    logging.debug(f"CHECK_INTERVAL: {check_interval}")
-    logging.debug(f"IMAP_SERVER: {imap_server}")
-    logging.debug(f"IMAP_PORT: {imap_port}")
-    logging.debug(f"SMTP_SERVER: {smtp_server}")
-    logging.debug(f"SMTP_PORT: {smtp_port}")
-    logging.debug(f"LOG_LEVEL: {log_level}")
+    logging.info("Forwarding Script started")
 
-    # Check if "email_username" & "forward_to_address" are valid email addresses
-    if not email_username.count('@') == 1:
-        raise ValueError(f'Invalid email address: {email_username}')
-    if not forward_to_address.count('@') == 1:
-        raise ValueError(f'Invalid email address: {forward_to_address}')
-
-    # Start the forwarding process
-    forward_emails(email_username, email_password, forward_to_address, imap_server, imap_port, smtp_server, smtp_port, check_interval)
-
-if __name__ == "__main__":
-    main()
+    forward_emails(
+        email_username,
+        email_password,
+        forward_to_address,
+        imap_server,
+        imap_port,
+        smtp_server,
+        smtp_port,
+        check_interval,
+    )
